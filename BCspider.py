@@ -2,32 +2,39 @@
 """ 
 This module provide method to get twitter, following, followers, discussions info in www.blogcatalog.com 
 Authors: Alex Lee(amazingcosmos@163.com) 
-Date: 2015/09/22 14:19:06 
+Date: 2015/09/23 11:19:06 
 """
 
 import urllib2
 import re
 import types
 from bs4 import BeautifulSoup
+import os
+import ConfigParser
 
-url = 'http://www.blogcatalog.com/user/'
+cf = ConfigParser.ConfigParser()
+cf.read('BCspider.conf')
+url = cf.get('basic','url')
 task_info = {}
-task_info['following'] = {'task_url' : '/friends/',
-    'button_a_class' : 'following_button rounded_4',
-    'button_div_class' : 'button_count',
-    'page_capacity' : 50,
-    'content_class' : 'friends'}
-task_info['followers'] = {'task_url' : '/followers/',
-    'button_a_class' : 'followers_button rounded_4',
-    'button_div_class' : 'button_count',
-    'page_capacity' : 50,
-    'content_class' : 'friends'}
-task_info['discussions'] = {'task_url' : '/discussions/',
-    'button_a_class' : 'discussions_button rounded_4',
-    'button_div_class' : 'button_count',
-    'page_capacity' : 20,
-    'content_class' : 'thread'}
-file_path = 'F:\\PythonProject\\'
+task_info['following'] = dict(cf.items('following'))
+task_info['followers'] = dict(cf.items('followers'))
+task_info['discussions'] = dict(cf.items('discussions'))
+# task_info['following'] = {'task_url' : '/friends/',
+#     'button_a_class' : 'following_button rounded_4',
+#     'button_div_class' : 'button_count',
+#     'page_capacity' : 50,
+#     'content_class' : 'friends'}
+# task_info['followers'] = {'task_url' : '/followers/',
+#     'button_a_class' : 'followers_button rounded_4',
+#     'button_div_class' : 'button_count',
+#     'page_capacity' : 50,
+#     'content_class' : 'friends'}
+# task_info['discussions'] = {'task_url' : '/discussions/',
+#     'button_a_class' : 'discussions_button rounded_4',
+#     'button_div_class' : 'button_count',
+#     'page_capacity' : 20,
+#     'content_class' : 'thread'}
+file_path = os.getcwd() + '\\data\\'
 
 def get_soup(url):
     """Fetch the BeautifulSoup object from a url
@@ -59,7 +66,7 @@ def get_basic_info(username, task):
     """
     result = {}
 
-    homepage = url + username
+    homepage = url + 'user/' + username
     soup = get_soup(homepage)
     if soup == None:
         return None 
@@ -105,7 +112,7 @@ def get_twitter_url(username):
     Returns:
         twitter_url: User's twitter homepage url.
     """
-    bio_url = url + username + '/bio/'
+    bio_url = url + 'user/' + username + '/bio/'
     soup = get_soup(bio_url)
 
     if soup == None:
@@ -178,8 +185,8 @@ def get_result(username, task_type):
         result: a list contains all the data you want to get from a user.
     """
     # init the local variable according to the task type
-    task_url = url + username + task_info[task_type]['task_url']
-    page_capacity = task_info[task_type]['page_capacity']
+    task_url = url + 'user/' + username + task_info[task_type]['task_url']
+    page_capacity = int(task_info[task_type]['page_capacity'])
     button_a_class = task_info[task_type]['button_a_class']
     button_div_class = task_info[task_type]['button_div_class']
 
@@ -242,21 +249,21 @@ def write_to_txt(data, file_path):
 if __name__ == '__main__':
     twitter_url = get_twitter_url('TonyB')
     print twitter_url
+    task = ['blog', 'followers', 'following', 'reading', 'discussions', 'twitter']
+    while(True):
+        username = raw_input('Please enter the blogcatalog username(0 for exit): ')
 
-    # while(True):
-    #     username = raw_input('Please enter the blogcatalog username(0 for exit): ')
+        if username == '0':
+            break
+        following = get_result(username, task_type = 'following')     
+        write_to_txt(following, file_path + str(username) + '_following.txt')
+        print str(username), 'following finished!'
 
-    #     if username == '0':
-    #         break
-    #     following = get_result(username, task_type = 'following')     
-    #     write_to_txt(following, file_path + str(username) + '_following.txt')
-    #     print str(username), 'following finished!'
+        followers = get_result(username, task_type = 'followers')
+        write_to_txt(followers, file_path + str(username)  + '_followers.txt')
+        print str(username), 'followers finished!'
 
-    #     followers = get_result(username, task_type = 'followers')
-    #     write_to_txt(followers, file_path + str(username)  + '_followers.txt')
-    #     print str(username), 'followers finished!'
-
-    #     discussions = get_result(username, task_type = 'discussions')
-    #     write_to_txt(discussions, file_path + str(username)  + '_discussions.txt')
-    #     print str(username), 'discussions finished!'
-    print get_basic_info('TonyB')
+        discussions = get_result(username, task_type = 'discussions')
+        write_to_txt(discussions, file_path + str(username)  + '_discussions.txt')
+        print str(username), 'discussions finished!'
+    print get_basic_info('houseonthetree', task)
