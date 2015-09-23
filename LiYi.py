@@ -27,25 +27,27 @@ info_txt_path = filepath + 'user_basic_info.txt'
 username_txt_path = filepath + 'username.txt'
 
 # get the list of used username
-user_list = []
-try:
-    if os.path.exists(username_txt_path):
-        fp = open(username_txt_path, 'r')
-        try:
-            while True:
-                line = fp.readline()[:-1]
-                if len(line) == 0:
-                    break
-                elif line.count('\n') == len(line):
-                    continue
-                else:
-                    user_list.append(line)
-        finally:
-            fp.close()
-    else:
-        user_list = []
-except IOError:
-    print("fail to open file")
+user_list = BCspider.read_txt(username_txt_path)
+# print user_list
+# print 'TonyB' in user_list
+# try:
+#     if os.path.exists(username_txt_path):
+#         fp = open(username_txt_path, 'r')
+#         try:
+#             while True:
+#                 line = fp.readline()[:-1]
+#                 if len(line) == 0:
+#                     break
+#                 elif line.count('\n') == len(line):
+#                     continue
+#                 else:
+#                     user_list.append(line)
+#         finally:
+#             fp.close()
+#     else:
+#         user_list = []
+# except IOError:
+#     print("fail to open file")
 
 # print type(task), task
 # print type(saving_threshold), saving_threshold
@@ -58,7 +60,6 @@ if __name__ == '__main__':
     user_info = {}
     # a list contains used username, once reach threshould, write file and clean.
     username_temp = []
-
 
     i = 1
     seed_num = len(seed_users)

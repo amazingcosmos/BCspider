@@ -14,11 +14,14 @@ import ConfigParser
 
 cf = ConfigParser.ConfigParser()
 cf.read('BCspider.conf')
+# the website's url
 url = cf.get('basic','url')
+# the infomation about the different tasks, contain the key html element.
 task_info = {}
 task_info['following'] = dict(cf.items('following'))
 task_info['followers'] = dict(cf.items('followers'))
 task_info['discussions'] = dict(cf.items('discussions'))
+
 # task_info['following'] = {'task_url' : '/friends/',
 #     'button_a_class' : 'following_button rounded_4',
 #     'button_div_class' : 'button_count',
@@ -34,7 +37,33 @@ task_info['discussions'] = dict(cf.items('discussions'))
 #     'button_div_class' : 'button_count',
 #     'page_capacity' : 20,
 #     'content_class' : 'thread'}
+
+# define where to store the data file.
 file_path = os.getcwd() + '\\data\\'
+
+
+def read_txt(file_path):
+    result = []
+    try:
+        if os.path.exists(file_path):
+            fp = open(file_path, 'r')
+            try:
+                while True:
+                    line = fp.readline()[:-1]
+                    if len(line) == 0:
+                        break
+                    elif line.count('\n') == len(line):
+                        continue
+                    else:
+                        result.append(line)
+            finally:
+                fp.close()
+        else:
+            result = []
+    except IOError:
+        print("fail to open file")
+    return result
+
 
 def get_soup(url):
     """Fetch the BeautifulSoup object from a url
@@ -62,7 +91,19 @@ def get_soup(url):
 
 
 def get_basic_info(username, task):
-    """
+    """get a user's basic info depended on what task u want to take.
+
+    We can gather the user's basic infomation on the user's homepage. There 
+    is a 'profile_nav' button area, showing how many blogs, reading, following,
+    followers, discussions. The twitter can be wrote the result if task contains.
+    Username is the defalt info.
+
+    Args:
+        username: the username to be searched.
+        task: dict contains what info wanted.
+
+    Returns:
+        result: dict stored the user info result.
     """
     result = {}
 
@@ -107,10 +148,10 @@ def get_twitter_url(username):
     if this button is exist, we can find the twitter link in it.
 
     Args:
-        username: The blogcatalog username you want to find.
+        username: the blogcatalog username you want to find.
 
     Returns:
-        twitter_url: User's twitter homepage url.
+        twitter_url: user's twitter homepage url.
     """
     bio_url = url + 'user/' + username + '/bio/'
     soup = get_soup(bio_url)
@@ -224,7 +265,7 @@ def get_result(username, task_type):
 def write_to_txt(data, file_path):
     """Write a list to a txt file.
 
-    Write a list to a txt file, with each item occupy a line.
+    Write a list/dict to a txt file, with each item occupy a line.
 
     Args:
         data: the list_obj you want to write to the file.
