@@ -147,14 +147,16 @@ def get_twitter_url(username):
 
     if soup == None:
         return ""
+    try:
+        bc_service_img = soup.find_all('td', 'bc_service_img')
 
-    bc_service_img = soup.find_all('td', 'bc_service_img')
-
-    for img in bc_service_img:
-        href = img.find('a', href=re.compile("twitter"))
-        if href:
-            twitter_url = href['href'].encode('utf-8')
-            return twitter_url
+        for img in bc_service_img:
+            href = img.find('a', href=re.compile("twitter"))
+            if href:
+                twitter_url = href['href'].encode('utf-8')
+                return twitter_url
+    except:
+        print 'get twitter error'
     return ""
 
 
@@ -174,6 +176,7 @@ def get_page_content(url, task_type):
         content: a string store all the result on this url's page. 
     """
     content = ""
+    error_str = 'get %s error'
     content_class = task_info[task_type]['content_class']
     soup = get_soup(url)
 
@@ -181,29 +184,39 @@ def get_page_content(url, task_type):
         return ""
 
     if task_type == 'following' or task_type == 'followers':
-        soup = soup.find('div', class_ = 'page_column_568')
-        c_list = soup.find('ul', class_ = content_class)
-        c_list = c_list.find_all('p', string = True)
-
-        for friend in c_list:
-            # name = friend.string.extract().encode("utf-8")
-            name = friend.string.decode("utf-8")
-            content = content + name + '$**$'
+        try:
+            soup = soup.find('div', class_ = 'page_column_568')
+            c_list = soup.find('ul', class_ = content_class)
+            c_list = c_list.find_all('p', string = True)
+        except:
+            print error_str % task_type
+        else:
+            for friend in c_list:
+                # name = friend.string.extract().encode("utf-8")
+                name = friend.string.decode("utf-8")
+                content = content + name + '$**$'
     elif task_type == 'discussions':
-        soup = soup.find('div', class_ = 'page_column_568')
-        c_list = soup.find_all('div', class_ = content_class)
+        try:
+            soup = soup.find('div', class_ = 'page_column_568')
+            c_list = soup.find_all('div', class_ = content_class)
+        except:
+            print error_str % task_type
+        else:
+            for thread in c_list:
+                try:
+                    thread_url = thread.find('h3').find('a')['href']
+                    thread_url = 'http://www.blogcatalog.com' + thread_url
+                    # thread_title = thread.find('h3').find('a').string.extract().encode('utf-8')
+                    # thread_comment_num = thread.find('h5').find('a').string.extract().encode('utf-8')
+                    thread_title = thread.find('h3').find('a').string.decode('utf-8').replace("\n", "")
+                    thread_comment_num = thread.find('h5').find('a').string.decode('utf-8')
+                    thread_comment_num = thread_comment_num.split(' ')[0][1:]
+                except:
+                    print error_str % task_type
+                else:
+                    line = thread_title + '$##$' + thread_url + '$##$' + thread_comment_num
+                    content = content + line + '$**$'
 
-        for thread in c_list:
-            thread_url = thread.find('h3').find('a')['href']
-            thread_url = 'http://www.blogcatalog.com' + thread_url
-            # thread_title = thread.find('h3').find('a').string.extract().encode('utf-8')
-            # thread_comment_num = thread.find('h5').find('a').string.extract().encode('utf-8')
-            thread_title = thread.find('h3').find('a').string.decode('utf-8').replace("\n", "")
-            thread_comment_num = thread.find('h5').find('a').string.decode('utf-8')
-            thread_comment_num = thread_comment_num.split(' ')[0][1:]
-
-            line = thread_title + '$##$' + thread_url + '$##$' + thread_comment_num
-            content = content + line + '$**$'
     if len(content) > 0:
         content = content[:-4]
     return content
@@ -225,32 +238,50 @@ def get_basic_info(username, task_type):
         result: dict stored the user info result.
     """
     result = {}
-
+    error_str = 'get %s error'
     homepage = url + 'user/' + username
     soup = get_soup(homepage)
     if soup == None:
         return None 
 
-    profile = soup.find('div', id = 'profile_nav')
+    try:
+        profile = soup.find('div', id = 'profile_nav')
+    except:
+        print error_str % 'profile'
     if 'blog' in task_type:
-        blog = profile.find('a', 'blog_button rounded_4')
-        blog_num = int(blog.find('div', class_ = 'button_count').string.extract())
+        try:
+            blog = profile.find('a', 'blog_button rounded_4')
+            blog_num = int(blog.find('div', class_ = 'button_count').string.extract())
+        except:
+            print error_str % 'blog'
         result['blog'] = blog_num
     if 'following' in task_type:
-        following = profile.find('a', 'following_button rounded_4')
-        following_num = int(following.find('div', class_ = 'button_count').string.extract())
+        try:
+            following = profile.find('a', 'following_button rounded_4')
+            following_num = int(following.find('div', class_ = 'button_count').string.extract())
+        except:
+            print error_str % 'following'
         result['following'] = following_num
     if 'followers' in task_type:
-        followers = profile.find('a', 'followers_button rounded_4')
-        followers_num = int(followers.find('div', class_ = 'button_count').string.extract())
+        try:
+            followers = profile.find('a', 'followers_button rounded_4')
+            followers_num = int(followers.find('div', class_ = 'button_count').string.extract())
+        except:
+            print error_str % 'followers'
         result['followers'] = followers_num
     if 'reading' in task_type:
-        reading = profile.find('a', 'favs_button rounded_4')
-        reading_num = int(reading.find('div', class_ = 'button_count').string.extract())
+        try:
+            reading = profile.find('a', 'favs_button rounded_4')
+            reading_num = int(reading.find('div', class_ = 'button_count').string.extract())
+        except:
+            print error_str % 'reading'
         result['reading'] = reading_num
     if 'discussions' in task_type:
-        discussions = profile.find('a', 'discussions_button rounded_4')
-        discussions_num = int(discussions.find('div', class_ = 'button_count').string.extract())
+        try:
+            discussions = profile.find('a', 'discussions_button rounded_4')
+            discussions_num = int(discussions.find('div', class_ = 'button_count').string.extract())
+        except:
+            print error_str % 'discussions'
         result['discussions'] = discussions_num
     if 'twitter' in task_type:
         twitter_url = get_twitter_url(username)
@@ -286,11 +317,12 @@ def get_detail_info(username, task_type):
     soup = get_soup(task_url)
     if soup == None:
         return ""
-
-    button = soup.find('a', class_ = button_a_class)
-    button_count = button.find('div', class_ = button_div_class)
-    num_task = int(button_count.string.extract())
-
+    try:
+        button = soup.find('a', class_ = button_a_class)
+        button_count = button.find('div', class_ = button_div_class)
+        num_task = int(button_count.string.extract())
+    except:
+        print 'get num_task error'
     if num_task > page_capacity:
         num_page = num_task / page_capacity + 1
         response = get_page_content(task_url, task_type)
@@ -386,11 +418,12 @@ def test():
     #     write_to_txt(discussions, file_path + 'info\\' + str(username)  + '_discussions.txt')
     #     print str(username), 'discussions finished!'
     print get_basic_info('houseonthetree', task)
-    detail = get_detail('neelium').split('$||$')
+    detail = get_detail('LAveryBrown').split('$||$')
     for d in detail:
         print d
 
 if __name__ == '__main__':
+    # test()
     user_done_path = file_path + 'user_done.txt'
     user_todo_path = file_path + 'user_todo.txt'
     user_info_path = file_path + 'user_info.txt'
@@ -423,5 +456,8 @@ if __name__ == '__main__':
                 write_to_txt(next_buffer, user_next_path)
                 next_buffer = []
         i = i + 1
+    write_to_txt(info_buffer, user_info_path)
+    write_to_txt(user_done, user_done_path)
+    write_to_txt(next_buffer, user_next_path)
 
     print 'finish!'
