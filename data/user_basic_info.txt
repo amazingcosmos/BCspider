@@ -1426,3 +1426,14 @@
 {'username': 'harisaryono', 'twitter': 'http://twitter.com/harisaryono', 'blog': 1, 'discussions': 1, 'followers': 532, 'following': 2440, 'reading': 1}
 {'username': 'PotatoChef', 'twitter': 'http://twitter.com/PotatoChef', 'blog': 2, 'discussions': 156, 'followers': 23, 'following': 132, 'reading': 0}
 {'username': 'healthypetnut', 'twitter': 'http://twitter.com/healthypetnut', 'blog': 2, 'discussions': 0, 'followers': 37, 'following': 318, 'reading': 19}
+{'username': 'codesucker', 'twitter': 'http://twitter.com/CodeSucker', 'blog': 1, 'discussions': 54, 'followers': 24, 'following': 99, 'reading': 0}
+{'username': 'TNMG', 'twitter': 'http://twitter.com/angshu_tnmg4u', 'blog': 2, 'discussions': 0, 'followers': 110, 'following': 1542, 'reading': 1}
+{'username': 'ratedkb', 'twitter': 'http://twitter.com/ratedkb', 'blog': 1, 'discussions': 9, 'followers': 2, 'following': 1, 'reading': 1}
+{'username': 'Funkkeejooce', 'twitter': 'http://twitter.com/funkkeejooce', 'blog': 1, 'discussions': 18, 'followers': 40, 'following': 43, 'reading': 6}
+{'username': 'bztat', 'twitter': 'http://twitter.com/@BZTAT', 'blog': 1, 'discussions': 0, 'followers': 3, 'following': 12, 'reading': 0}
+{'username': 'lyndsays85', 'twitter': 'http://twitter.com/lyndsay_wheble', 'blog': 1, 'discussions': 0, 'followers': 7, 'following': 7, 'reading': 17}
+{'username': 'MissyRicco', 'twitter': 'http://twitter.com/AtArtWords', 'blog': 1, 'discussions': 0, 'followers': 42, 'following': 331, 'reading': 14}
+{'username': 'alvintlh', 'twitter': 'http://twitter.com/theRealAlvinTan', 'blog': 1, 'discussions': 90, 'followers': 18, 'following': 86, 'reading': 0}
+{'username': 'minikkus', 'twitter': 'http://twitter.com/amanyasli', 'blog': 1, 'discussions': 0, 'followers': 1, 'following': 1, 'reading': 2}
+{'username': 'Statementadf', 'twitter': 'http://twitter.com/Statementadf', 'blog': 1, 'discussions': 0, 'followers': 15, 'following': 21, 'reading': 8}
+{'username': 'jeanninedavidoff', 'twitter': 'http://twitter.com/jeannineda', 'blog': 1, 'discussions': 0, 'followers': 70, 'following': 447, 'reading': 11}

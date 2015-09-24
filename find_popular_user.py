@@ -3,8 +3,8 @@
 import ConfigParser
 import BCspider
 
-if __name__ == '__main__':
-    fp = open('./data/user_basic_info.txt', 'r')
+def find_popular_user(file_path = './data/user_basic_info.txt'):
+    fp = open(file_path, 'r')
     seed_user = {}
     try:
         while True:
@@ -21,5 +21,5 @@ if __name__ == '__main__':
                     seed_user[user_info['username']] = [following_num, followers_num]
     finally:
         fp.close()
-    print sorted(seed_user.iteritems(), key = lambda asd:asd[1][1], reverse = True)
+    return sorted(seed_user.iteritems(), key = lambda asd:asd[1][1], reverse = True)
 

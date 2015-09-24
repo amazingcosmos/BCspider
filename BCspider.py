@@ -21,28 +21,23 @@ task_info = {}
 task_info['following'] = dict(cf.items('following'))
 task_info['followers'] = dict(cf.items('followers'))
 task_info['discussions'] = dict(cf.items('discussions'))
-
-# task_info['following'] = {'task_url' : '/friends/',
-#     'button_a_class' : 'following_button rounded_4',
-#     'button_div_class' : 'button_count',
-#     'page_capacity' : 50,
-#     'content_class' : 'friends'}
-# task_info['followers'] = {'task_url' : '/followers/',
-#     'button_a_class' : 'followers_button rounded_4',
-#     'button_div_class' : 'button_count',
-#     'page_capacity' : 50,
-#     'content_class' : 'friends'}
-# task_info['discussions'] = {'task_url' : '/discussions/',
-#     'button_a_class' : 'discussions_button rounded_4',
-#     'button_div_class' : 'button_count',
-#     'page_capacity' : 20,
-#     'content_class' : 'thread'}
-
+# define the task you want to be taken this time.
+basic_task = list(eval(cf.get("basic", "basic_task")))
+# define how many people gathered is the time to save info to txt.
+saving_threshold = int(cf.get("basic", "saving_threshold"))
+# define the seed user
+seed_users = list(eval(cf.get("basic", "seed_users")))
 # define where to store the data file.
 file_path = os.getcwd() + '\\data\\'
+if not os.path.exists(file_path):
+    os.mkdir(file_path)
+if not os.path.exists(file_path + 'info\\'):
+    os.mkdir(file_path + 'info\\')
+basic_info_path = file_path + 'user_basic_info.txt'
+user_done_path = file_path + 'user_done.txt'
 
 
-def read_txt(file_path):
+def read_from_txt(file_path):
     result = []
     try:
         if os.path.exists(file_path):
@@ -63,6 +58,36 @@ def read_txt(file_path):
     except IOError:
         print("fail to open file")
     return result
+
+
+def write_to_txt(data, file_path):
+    """Write a list to a txt file.
+
+    Write a list/dict to a txt file, with each item occupy a line.
+
+    Args:
+        data: the list_obj you want to write to the file.
+        file_path: the path of the file.
+
+    Returns:
+        None
+    """
+    if data == None:
+        fp = open(file_path, 'a')
+        fp.close()
+    else:
+        try:
+            fp = open(file_path, 'a')
+            try:
+                for item in data:
+                    if type(data) is types.ListType:
+                        fp.write(str(item) + '\n')
+                    if type(data) is types.DictType:
+                        fp.write(str(data[item]) + '\n')
+            finally:
+                fp.close()
+        except IOError:
+            print("fail to open file")
 
 
 def get_soup(url):
@@ -88,57 +113,6 @@ def get_soup(url):
         print "The reason:", e.reason
 
     return soup
-
-
-def get_basic_info(username, task):
-    """get a user's basic info depended on what task u want to take.
-
-    We can gather the user's basic infomation on the user's homepage. There 
-    is a 'profile_nav' button area, showing how many blogs, reading, following,
-    followers, discussions. The twitter can be wrote the result if task contains.
-    Username is the defalt info.
-
-    Args:
-        username: the username to be searched.
-        task: dict contains what info wanted.
-
-    Returns:
-        result: dict stored the user info result.
-    """
-    result = {}
-
-    homepage = url + 'user/' + username
-    soup = get_soup(homepage)
-    if soup == None:
-        return None 
-
-    profile = soup.find('div', id = 'profile_nav')
-    if 'blog' in task:
-        blog = profile.find('a', 'blog_button rounded_4')
-        blog_num = int(blog.find('div', class_ = 'button_count').string.extract())
-        result['blog'] = blog_num
-    if 'following' in task:
-        following = profile.find('a', 'following_button rounded_4')
-        following_num = int(following.find('div', class_ = 'button_count').string.extract())
-        result['following'] = following_num
-    if 'followers' in task:
-        followers = profile.find('a', 'followers_button rounded_4')
-        followers_num = int(followers.find('div', class_ = 'button_count').string.extract())
-        result['followers'] = followers_num
-    if 'reading' in task:
-        reading = profile.find('a', 'favs_button rounded_4')
-        reading_num = int(reading.find('div', class_ = 'button_count').string.extract())
-        result['reading'] = reading_num
-    if 'discussions' in task:
-        discussions = profile.find('a', 'discussions_button rounded_4')
-        discussions_num = int(discussions.find('div', class_ = 'button_count').string.extract())
-        result['discussions'] = discussions_num
-    if 'twitter' in task:
-        twitter_url = get_twitter_url(username)
-        result['twitter'] = twitter_url
-    result['username'] = username
-
-    return result
 
 
 def get_twitter_url(username):
@@ -169,7 +143,7 @@ def get_twitter_url(username):
     return None
 
 
-def get_content(url, task_type):
+def get_page_content(url, task_type):
     """Get the content you want to find in a page according to the task type.
 
     With three kinds of task type: following, followers, discussions, there are two
@@ -210,13 +184,64 @@ def get_content(url, task_type):
     return content
 
 
-def get_result(username, task_type):
+def get_basic_info(username, task_type):
+    """get a user's basic info depended on what task u want to take.
+
+    We can gather the user's basic infomation on the user's homepage. There 
+    is a 'profile_nav' button area, showing how many blogs, reading, following,
+    followers, discussions. The twitter can be wrote the result if task contains.
+    Username is the defalt info.
+
+    Args:
+        username: the username to be searched.
+        task_type: dict contains what info wanted.
+
+    Returns:
+        result: dict stored the user info result.
+    """
+    result = {}
+
+    homepage = url + 'user/' + username
+    soup = get_soup(homepage)
+    if soup == None:
+        return None 
+
+    profile = soup.find('div', id = 'profile_nav')
+    if 'blog' in task_type:
+        blog = profile.find('a', 'blog_button rounded_4')
+        blog_num = int(blog.find('div', class_ = 'button_count').string.extract())
+        result['blog'] = blog_num
+    if 'following' in task_type:
+        following = profile.find('a', 'following_button rounded_4')
+        following_num = int(following.find('div', class_ = 'button_count').string.extract())
+        result['following'] = following_num
+    if 'followers' in task_type:
+        followers = profile.find('a', 'followers_button rounded_4')
+        followers_num = int(followers.find('div', class_ = 'button_count').string.extract())
+        result['followers'] = followers_num
+    if 'reading' in task_type:
+        reading = profile.find('a', 'favs_button rounded_4')
+        reading_num = int(reading.find('div', class_ = 'button_count').string.extract())
+        result['reading'] = reading_num
+    if 'discussions' in task_type:
+        discussions = profile.find('a', 'discussions_button rounded_4')
+        discussions_num = int(discussions.find('div', class_ = 'button_count').string.extract())
+        result['discussions'] = discussions_num
+    if 'twitter' in task_type:
+        twitter_url = get_twitter_url(username)
+        result['twitter'] = twitter_url
+    result['username'] = username
+
+    return result
+
+
+def get_detail_info(username, task_type):
     """Process a specific task of a blogcatalog user.
 
     On the homepage of a user, the program analysis page's source code.
     Get the number of a type(following, followers, discussions) and count 
     how many pages it has to search. It send each page's url to the 
-    get_content function, get function's return.
+    get_page_content function, get function's return.
 
     Args:
         username: blogcatalog username.
@@ -245,47 +270,24 @@ def get_result(username, task_type):
 
     if num_task > page_capacity:
         num_page = num_task / page_capacity + 1
-        response = get_content(task_url, task_type)
+        response = get_page_content(task_url, task_type)
         if response != None:
             result += response
         for i in range(2, num_page + 1):
             print 100.0 * i / num_page, "%"
-            response = get_content(task_url + str(i), task_type)
+            response = get_page_content(task_url + str(i), task_type)
             if response != None:
                 result += response
     elif num_task > 0:
-        response = get_content(task_url,task_type)
+        response = get_page_content(task_url,task_type)
         if response != None:
             result += response
-    # result += get_content(task_url,task_type)
+    elif num_task == 0:
+        return None
+    # result += get_page_content(task_url,task_type)
 
     return result
 
-
-def write_to_txt(data, file_path):
-    """Write a list to a txt file.
-
-    Write a list/dict to a txt file, with each item occupy a line.
-
-    Args:
-        data: the list_obj you want to write to the file.
-        file_path: the path of the file.
-
-    Returns:
-        None
-    """
-    try:
-        fp = open(file_path, 'a')
-        try:
-            for item in data:
-                if type(data) is types.ListType:
-                    fp.write(str(item) + '\n')
-                if type(data) is types.DictType:
-                    fp.write(str(data[item]) + '\n')
-        finally:
-            fp.close()
-    except IOError:
-        print("fail to open file")
 
 if __name__ == '__main__':
     twitter_url = get_twitter_url('TonyB')
@@ -296,15 +298,15 @@ if __name__ == '__main__':
 
         if username == '0':
             break
-        following = get_result(username, task_type = 'following')     
-        write_to_txt(following, file_path + str(username) + '_following.txt')
+        following = get_detail_info(username, task_type = 'following')     
+        write_to_txt(following, file_path + 'info\\' + str(username) + '_following.txt')
         print str(username), 'following finished!'
 
-        followers = get_result(username, task_type = 'followers')
-        write_to_txt(followers, file_path + str(username)  + '_followers.txt')
+        followers = get_detail_info(username, task_type = 'followers')
+        write_to_txt(followers, file_path + 'info\\' + str(username)  + '_followers.txt')
         print str(username), 'followers finished!'
 
-        discussions = get_result(username, task_type = 'discussions')
-        write_to_txt(discussions, file_path + str(username)  + '_discussions.txt')
+        discussions = get_detail_info(username, task_type = 'discussions')
+        write_to_txt(discussions, file_path + 'info\\' + str(username)  + '_discussions.txt')
         print str(username), 'discussions finished!'
     print get_basic_info('houseonthetree', task)
