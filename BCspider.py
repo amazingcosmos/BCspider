@@ -434,6 +434,7 @@ if __name__ == '__main__':
     user_todo = read_from_txt(user_todo_path)
     info_buffer = []
     next_buffer = []
+    done_buffer = []
 
     i = 1
     for u in user_todo:
@@ -442,22 +443,20 @@ if __name__ == '__main__':
             info = get_detail(u)
             info_buffer.append(info)
             user_done.append(u)
+            done_buffer.append(u)
             info = info.split('$||$')
             follow = info[2] + '$**$' + info[3]
             next_buffer.append(follow) 
             if len(info_buffer) > saving_threshold:
                 write_to_txt(info_buffer, user_info_path)
                 info_buffer = []
-
-                write_to_txt(user_done, user_done_path)
-                # fresh the user_done list.
-                user_done = read_from_txt(user_done_path)
-
                 write_to_txt(next_buffer, user_next_path)
                 next_buffer = []
+                write_to_txt(done_buffer, user_done_path)
+                done_buffer = []
         i = i + 1
     write_to_txt(info_buffer, user_info_path)
-    write_to_txt(user_done, user_done_path)
+    write_to_txt(done_buffer, user_done_path)
     write_to_txt(next_buffer, user_next_path)
 
     print 'finish!'
