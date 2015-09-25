@@ -50,10 +50,11 @@ def count_user(file_path = './data/user_next.txt'):
     for line in users:
         total_user += line.split('$**$')
         total_user = list(set(total_user))
-    print len(total_user)
+    return len(total_user)
 
 if __name__ == '__main__':
-    count_user()
+    user_num = count_user('./data/user_next.txt')
+    print 'the number of next layer user is:', user_num, '\n'
     # user_todo = find_popular_user()
     # # print len(user_todo)
     # BCspider.write_to_txt(user_todo, './data/user_todo.txt')

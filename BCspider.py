@@ -459,4 +459,4 @@ if __name__ == '__main__':
     write_to_txt(done_buffer, user_done_path)
     write_to_txt(next_buffer, user_next_path)
 
-    print 'finish!'
+    print 'finish!\n'
