@@ -4,6 +4,14 @@ import ConfigParser
 import BCspider
 import sys
 
+
+def get_user(file_path , index_from, index_to):
+    """
+    """
+    user_todo = BCspider.read_from_txt(file_path + 'filter.txt', '$||$', 0)[index_from:index_to]
+    BCspider.write_to_txt(user_todo, file_path + 'user_todo.txt')
+
+
 def find_popular_user(file_path = './data/user_basic_info.txt'):
     fp = open(file_path, 'r')
     users = []
@@ -26,24 +34,6 @@ def find_popular_user(file_path = './data/user_basic_info.txt'):
         fp.close()
     return users
 
-def get_username(file_path = './data/user_basic_info.txt'):
-    fp = open(file_path, 'r')
-    username = []
-    try:
-        while True:
-            line = fp.readline()
-            if len(line) == 0:
-                break
-            elif line.count('\n') == len(line):
-                continue
-            else:
-                user_info = eval(line)
-                name = user_info['username']
-                username.append(name)
-    finally:
-        fp.close()
-    BCspider.write_to_txt(username, './data/user_todo.txt')
-
 
 def count_user(file_path = './data/user_next.txt'):
     total_user = []
@@ -54,10 +44,12 @@ def count_user(file_path = './data/user_next.txt'):
     return len(total_user)
 
 if __name__ == '__main__':
-    user_num = count_user('./data/user_next.txt')
-    print 'the number of next layer user is:', user_num, '\n'
-    sys.exit(1)
+    # user_num = count_user('./data/user_next.txt')
+    # print 'the number of next layer user is:', user_num, '\n'
+    # sys.exit(1)
     # user_todo = find_popular_user()
     # # print len(user_todo)
     # BCspider.write_to_txt(user_todo, './data/user_todo.txt')
+
+    get_user('./filter/', 3, 13)
 

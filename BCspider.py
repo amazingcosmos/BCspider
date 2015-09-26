@@ -16,7 +16,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 cf = ConfigParser.ConfigParser()
-cf.read('BCspider.conf')
+cf.read('./BCspider.conf')
 # the website's url
 url = cf.get('basic','url')
 # the infomation about the different tasks, contain the key html element.
@@ -31,16 +31,12 @@ saving_threshold = int(cf.get("basic", "saving_threshold"))
 # define the seed user
 seed_users = list(eval(cf.get("basic", "seed_users")))
 # define where to store the data file.
-file_path = os.getcwd() + '\\data\\'
-if not os.path.exists(file_path):
-    os.mkdir(file_path)
-# if not os.path.exists(file_path + 'info\\'):
-#     os.mkdir(file_path + 'info\\')
-# basic_info_path = file_path + 'user_basic_info.txt'
+file_path = os.getcwd()
+if not os.path.exists(file_path + '\\data\\'):
+    os.mkdir(file_path + '\\data\\')
 
 
-
-def read_from_txt(file_path):
+def read_from_txt(file_path, split_char, split_index):
     """read a list from txt 
 
     In the file, there are lines of data. The program extract a line into a list element.
@@ -54,21 +50,19 @@ def read_from_txt(file_path):
     """
     result = []
     try:
-        if os.path.exists(file_path):
-            fp = open(file_path, 'r')
-            try:
-                while True:
-                    line = fp.readline()[:-1]
-                    if len(line) == 0:
-                        break
-                    elif line.count('\n') == len(line):
-                        continue
-                    else:
-                        result.append(line)
-            finally:
-                fp.close()
-        else:
-            result = []
+        fp = open(file_path, 'r')
+        try:
+            while True:
+                line = fp.readline()[:-1]
+                if len(line) == 0:
+                    break
+                elif line.count('\n') == len(line):
+                    continue
+                else:
+                    line = line.split(split_char)[split_index].encode('utf-8')
+                    result.append(line)
+        finally:
+            fp.close()
     except IOError:
         print("fail to open file")
     return result
@@ -93,11 +87,14 @@ def write_to_txt(data, file_path):
         try:
             fp = open(file_path, 'a')
             try:
-                for item in data:
-                    if type(data) is types.ListType:
+                if type(data) is types.ListType:
+                    for item in data:
                         fp.write(str(item) + '\n')
-                    if type(data) is types.DictType:
+                elif type(data) is types.DictType:
+                    for item in data:
                         fp.write(str(data[item]) + '\n')
+                elif type(data) is types.StringType:
+                    fp.write(data + '\n')
                 print("write file success")
             finally:
                 fp.close()
@@ -192,9 +189,10 @@ def get_page_content(url, task_type):
             print error_str % task_type
         else:
             for friend in c_list:
-                # name = friend.string.extract().encode("utf-8")
-                name = friend.string.decode("utf-8")
-                content = content + name + '$**$'
+                name = friend.string
+                content = content + name + '$||$'
+        if len(content) > 0:
+            content = content[:-4]
     elif task_type == 'discussions':
         try:
             soup = soup.find('div', class_ = 'page_column_568')
@@ -206,29 +204,28 @@ def get_page_content(url, task_type):
                 try:
                     thread_url = thread.find('h3').find('a')['href']
                     thread_url = 'http://www.blogcatalog.com' + thread_url
-                    # thread_title = thread.find('h3').find('a').string.extract().encode('utf-8')
-                    # thread_comment_num = thread.find('h5').find('a').string.extract().encode('utf-8')
-                    thread_title = thread.find('h3').find('a').string.decode('utf-8').replace("\n", "")
-                    thread_comment_num = thread.find('h5').find('a').string.decode('utf-8')
+                    thread_title = thread.find('h3').find('a').string.replace("\n", "")
+                    thread_comment_num = thread.find('h5').find('a').string
                     thread_comment_num = thread_comment_num.split(' ')[0][1:]
                 except:
                     print error_str % task_type
                 else:
-                    line = thread_title + '$##$' + thread_url + '$##$' + thread_comment_num
-                    content = content + line + '$**$'
+                    line = thread_title + '$||$' + thread_url + '$||$' + thread_comment_num
+                    content = content + line + '\n'
+        if len(content) > 0:
+            content = content[:-1]
+    return content.encode('utf-8')
 
-    if len(content) > 0:
-        content = content[:-4]
-    return content
 
-
-def get_basic_info(username, task_type):
+def get_basic_info(username):
     """get a user's basic info depended on what task u want to take.
 
     We can gather the user's basic infomation on the user's homepage. There 
     is a 'profile_nav' button area, showing how many blogs, reading, following,
     followers, discussions. The twitter can be wrote the result if task contains.
     Username is the defalt info.
+    data structure:
+        username$||$twitter_url$||$follower$||$following$||$blog$||$reading$||$discussions
 
     Args:
         username: the username to be searched.
@@ -237,58 +234,59 @@ def get_basic_info(username, task_type):
     Returns:
         result: dict stored the user info result.
     """
-    result = {}
+    result = ""
     error_str = 'get %s error'
     homepage = url + 'user/' + username
     soup = get_soup(homepage)
     if soup == None:
-        return None 
+        return ""
 
+    result += username + '$||$'
     try:
         profile = soup.find('div', id = 'profile_nav')
     except:
         print error_str % 'profile'
-    if 'blog' in task_type:
-        try:
-            blog = profile.find('a', 'blog_button rounded_4')
-            blog_num = int(blog.find('div', class_ = 'button_count').string.extract())
-        except:
-            print error_str % 'blog'
-        result['blog'] = blog_num
-    if 'following' in task_type:
-        try:
-            following = profile.find('a', 'following_button rounded_4')
-            following_num = int(following.find('div', class_ = 'button_count').string.extract())
-        except:
-            print error_str % 'following'
-        result['following'] = following_num
-    if 'followers' in task_type:
-        try:
-            followers = profile.find('a', 'followers_button rounded_4')
-            followers_num = int(followers.find('div', class_ = 'button_count').string.extract())
-        except:
-            print error_str % 'followers'
-        result['followers'] = followers_num
-    if 'reading' in task_type:
-        try:
-            reading = profile.find('a', 'favs_button rounded_4')
-            reading_num = int(reading.find('div', class_ = 'button_count').string.extract())
-        except:
-            print error_str % 'reading'
-        result['reading'] = reading_num
-    if 'discussions' in task_type:
-        try:
-            discussions = profile.find('a', 'discussions_button rounded_4')
-            discussions_num = int(discussions.find('div', class_ = 'button_count').string.extract())
-        except:
-            print error_str % 'discussions'
-        result['discussions'] = discussions_num
-    if 'twitter' in task_type:
-        twitter_url = get_twitter_url(username)
-        result['twitter'] = twitter_url
-    result['username'] = username
 
-    return result
+    twitter_url = get_twitter_url(username)
+    result += twitter_url + '$||$'
+
+    try:
+        followers = profile.find('a', 'followers_button rounded_4')
+        followers_num = followers.find('div', class_ = 'button_count').string.encode('utf-8')
+        result += followers_num + '$||$'
+    except:
+        print error_str % 'followers'
+
+    try:
+        following = profile.find('a', 'following_button rounded_4')
+        following_num = following.find('div', class_ = 'button_count').string.encode('utf-8')
+        result += following_num + '$||$'
+    except:
+        print error_str % 'following'
+    
+    try:
+        blog = profile.find('a', 'blog_button rounded_4')
+        blog_num = blog.find('div', class_ = 'button_count').string.encode('utf-8')
+        result += blog_num + '$||$'
+    except:
+        print error_str % 'blog'
+    
+    try:
+        reading = profile.find('a', 'favs_button rounded_4')
+        reading_num = reading.find('div', class_ = 'button_count').string.encode('utf-8')
+        result += reading_num + '$||$'
+    except:
+        print error_str % 'reading'
+    
+    try:
+        discussions = profile.find('a', 'discussions_button rounded_4')
+        discussions_num = discussions.find('div', class_ = 'button_count').string.encode('utf-8')
+        result += discussions_num + '$||$'
+    except:
+        print error_str % 'discussions'
+    
+    result = result[:-4]
+    return result.encode('utf-8')
 
 
 def get_detail_info(username, task_type):
@@ -339,124 +337,62 @@ def get_detail_info(username, task_type):
             result += response
     # result += get_page_content(task_url,task_type)
     print task_type, 'done!'
-    return result
+    return result.encode('utf-8')
 
-"""
-def get_basic():
-    # a dict contains the user's infomation, once reach threshould, write file and clean.
-    user_info = {}
-    # a list contains used username, once reach threshould, write file and clean.
-    user_done = []
+
+def get_info(work_dir):
+    user_done_path = work_dir + '\\filter\\' + 'user_done.txt'
+    user_todo_path = work_dir + '\\filter\\' + 'user_todo.txt'
+    user_next_path = work_dir + '\\filter\\' + 'user_next.txt'
+    # a list contains used username.
+    user_done = read_from_txt(user_done_path, ' ', 0)
+    # a list contains the username to be done.
+    user_todo = read_from_txt(user_todo_path, ' ', 0)
 
     i = 1
-    seed_num = len(seed_users)
-    for seed in seed_users:
-        # print seed
-        print i, '/', seed_num
-        following = BCspider.get_result(seed, task_type = 'following')
-        followers = BCspider.get_result(seed, task_type = 'followers')
-        total_user = followers + following
-        total_user = list(set(total_user))
-        total_num = len(total_user)
-        j = 1
-        for u in total_user:
-            print 100.0 * j / total_num, '%'
-            if not u in user_list:
-                user_done.append(u)
-                twitter_url = BCspider.get_twitter_url(u)
-                if twitter_url != None:
-                    user_list.append(u)
-                    response = BCspider.get_basic_info(u, basic_task)
-                    response['twitter'] = twitter_url
-                    user_info[u] = response
-            j = j + 1
-            # save the buffer username and user_info to txt file 
-            if len(user_info) > saving_threshold:
-                BCspider.write_to_txt(user_done, user_done_path)
-                BCspider.write_to_txt(user_info, basic_info_path)
-                user_done = []
-                user_info = {}
+    user_num = len(user_todo)
+    for username in user_todo:
+        print i, '/', user_num
+        if not username in user_done:
+            user_info = ""
+            user_file_path = work_dir + '\\data\\' + username + '.txt'
+            basic_info = get_basic_info(username)
+            followers = get_detail_info(username, task_type = 'followers')
+            following = get_detail_info(username, task_type = 'following')
+            discussions = get_detail_info(username, task_type = 'discussions')
+            user_info += basic_info + '\n' + followers + '\n' + following + '\n' + discussions
+            write_to_txt(user_info, user_file_path)
+            write_to_txt(username, user_done_path)
+            write_to_txt(followers + '$||$' + following, user_next_path)
         i = i + 1
-        print '\n'
-
-    BCspider.write_to_txt(user_done, user_done_path)
-    BCspider.write_to_txt(user_info, basic_info_path)
-"""
-
-def get_detail(username):
-    # a string contains the user's infomation.
-    user_info = ""
-
-    following = get_detail_info(username, task_type = 'following')
-    followers = get_detail_info(username, task_type = 'followers')
-    discussions = get_detail_info(username, task_type = 'discussions')
-    twitter_url = get_twitter_url(username)
-
-    user_info += username + '$||$' + twitter_url + '$||$' + followers + '$||$' + following + '$||$' + discussions
-
-    return user_info
+    return 1
 
 
 def test():
-    twitter_url = get_twitter_url('TonyB')
-    print twitter_url
-    task = ['blog', 'followers', 'following', 'reading', 'discussions', 'twitter']
-    # while(True):
-    #     username = raw_input('Please enter the blogcatalog username(0 for exit): ')
+    """test this module
 
-    #     if username == '0':
-    #         break
-    #     following = get_detail_info(username, task_type = 'following')     
-    #     write_to_txt(following, file_path + 'info\\' + str(username) + '_following.txt')
-    #     print str(username), 'following finished!'
+    Test whether this module's most function woring well
+    """
+    print get_twitter_url('TonyB')
 
-    #     followers = get_detail_info(username, task_type = 'followers')
-    #     write_to_txt(followers, file_path + 'info\\' + str(username)  + '_followers.txt')
-    #     print str(username), 'followers finished!'
+    print get_basic_info('TonyB')
 
-    #     discussions = get_detail_info(username, task_type = 'discussions')
-    #     write_to_txt(discussions, file_path + 'info\\' + str(username)  + '_discussions.txt')
-    #     print str(username), 'discussions finished!'
-    print get_basic_info('houseonthetree', task)
-    detail = get_detail('LAveryBrown').split('$||$')
-    for d in detail:
-        print d
+    if not os.path.exists(file_path + '\\test\\'):
+        os.mkdir(file_path + '\\test\\')
+
+    username = 'caramiawhy'
+    following = get_detail_info(username, task_type = 'following')
+    write_to_txt(following, file_path + '\\test\\' + str(username) + '_following.txt')
+    print str(username), 'following finished!'
+    followers = get_detail_info(username, task_type = 'followers')
+    write_to_txt(followers, file_path + '\\test\\' + str(username) + '_followers.txt')
+    print str(username), 'followers finished!'
+    discussions = get_detail_info(username, task_type = 'discussions')
+    write_to_txt(discussions, file_path + '\\test\\' + str(username) + '_discussions.txt')
+    print str(username), 'discussions finished!'
+    
 
 if __name__ == '__main__':
     # test()
-    user_done_path = file_path + 'user_done.txt'
-    user_todo_path = file_path + 'user_todo.txt'
-    user_info_path = file_path + 'user_info.txt'
-    user_next_path = file_path + 'user_next.txt'
-    # a list contains used username.
-    user_done = read_from_txt(user_done_path)
-    # a list contains the username to be done.
-    user_todo = read_from_txt(user_todo_path)
-    info_buffer = []
-    next_buffer = []
-    done_buffer = []
-
-    i = 1
-    for u in user_todo:
-        print i, '/', len(user_todo)
-        if not u in user_done:
-            info = get_detail(u)
-            info_buffer.append(info)
-            user_done.append(u)
-            done_buffer.append(u)
-            info = info.split('$||$')
-            follow = info[2] + '$**$' + info[3]
-            next_buffer.append(follow) 
-            if len(info_buffer) > saving_threshold:
-                write_to_txt(info_buffer, user_info_path)
-                info_buffer = []
-                write_to_txt(next_buffer, user_next_path)
-                next_buffer = []
-                write_to_txt(done_buffer, user_done_path)
-                done_buffer = []
-        i = i + 1
-    write_to_txt(info_buffer, user_info_path)
-    write_to_txt(done_buffer, user_done_path)
-    write_to_txt(next_buffer, user_next_path)
-
+    get_info(file_path)
     print 'finish!\n'
