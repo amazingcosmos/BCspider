@@ -35,21 +35,21 @@ def find_popular_user(file_path = './data/user_basic_info.txt'):
     return users
 
 
-def count_user(file_path = './data/user_next.txt'):
+def count_user(file_path = './filter/user_next.txt'):
     total_user = []
-    users = BCspider.read_from_txt(file_path)
+    users = BCspider.read_from_txt(file_path , ' ', 0)
     for line in users:
-        total_user += line.split('$**$')
+        total_user += line.split('$||$')
         total_user = list(set(total_user))
     return len(total_user)
 
 if __name__ == '__main__':
-    # user_num = count_user('./data/user_next.txt')
-    # print 'the number of next layer user is:', user_num, '\n'
-    # sys.exit(1)
+    user_num = count_user('./filter/user_next.txt')
+    print 'the number of next layer user is:', user_num, '\n'
+    sys.exit(1)
     # user_todo = find_popular_user()
     # # print len(user_todo)
     # BCspider.write_to_txt(user_todo, './data/user_todo.txt')
 
-    get_user('./filter/', 3, 13)
+    # get_user('./filter/', 3, 13)
 
