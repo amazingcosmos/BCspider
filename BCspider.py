@@ -2,7 +2,7 @@
 """ 
 This module provide method to get twitter, following, followers, discussions info in www.blogcatalog.com 
 Authors: Alex Lee(amazingcosmos@163.com) 
-Date: 2015/09/23 11:19:06 
+Date: 2015/09/26 17:19:06 
 """
 
 import urllib2
@@ -24,26 +24,26 @@ task_info = {}
 task_info['following'] = dict(cf.items('following'))
 task_info['followers'] = dict(cf.items('followers'))
 task_info['discussions'] = dict(cf.items('discussions'))
-# define the task you want to be taken this time.
-basic_task = list(eval(cf.get("basic", "basic_task")))
 # define how many people gathered is the time to save info to txt.
 saving_threshold = int(cf.get("basic", "saving_threshold"))
 # define the seed user
 seed_users = list(eval(cf.get("basic", "seed_users")))
 # define where to store the data file.
 file_path = os.getcwd()
-if not os.path.exists(file_path + '\\data\\'):
-    os.mkdir(file_path + '\\data\\')
+if not os.path.exists(file_path + '/data/'):
+    os.mkdir(file_path + '/data/')
 
 
 def read_from_txt(file_path, split_char, split_index):
     """read a list from txt 
 
-    In the file, there are lines of data. The program extract a line into a list element.
-    and return this list.
+    In the file, there are lines of data. The program split the line by split_char.
+    get the string u want in split_index and store it into a list and then return this list.
 
     Args:
         file_path: the file to be extracted.
+        split_char: the specific char used to split the line.
+        split_index: the index of the string after splitted.
 
     Returns:
         result: a list contains the data in file.
@@ -69,9 +69,9 @@ def read_from_txt(file_path, split_char, split_index):
 
 
 def write_to_txt(data, file_path):
-    """Write a list to a txt file.
+    """Write data to a txt file.
 
-    Write a list/dict to a txt file, with each item occupy a line.
+    Write a list/dict/string to a txt file, with each item occupy a line.
 
     Args:
         data: the list_obj you want to write to the file.
@@ -162,8 +162,8 @@ def get_page_content(url, task_type):
 
     With three kinds of task type: following, followers, discussions, there are two
     different strategys. On the head of this module I define a dict named task_info,
-    which contains the variables we need to deal with different task. Then, the program
-    will search the html code to find the content you need.
+    which contains the variables needed to deal with different task. Then, the program
+    will search the html code to find the content you want.
 
     Args:
         url: The string url needed to be processed.
@@ -222,17 +222,16 @@ def get_basic_info(username):
 
     We can gather the user's basic infomation on the user's homepage. There 
     is a 'profile_nav' button area, showing how many blogs, reading, following,
-    followers, discussions. The twitter can be wrote the result if task contains.
+    followers, discussions. The twitter_url is gathered by func get_twitter_url.
     Username is the defalt info.
     data structure:
-        username$||$twitter_url$||$follower$||$following$||$blog$||$reading$||$discussions
+        username$||$twitter_url$||$follower_num$||$following_num$||$blog_num$||$reading_num$||$discussions_num
 
     Args:
         username: the username to be searched.
-        task_type: dict contains what info wanted.
 
     Returns:
-        result: dict stored the user info result.
+        result: string stored the user info result.
     """
     result = ""
     error_str = 'get %s error'
@@ -290,12 +289,12 @@ def get_basic_info(username):
 
 
 def get_detail_info(username, task_type):
-    """Process a specific task of a blogcatalog user.
+    """get specific detail info of a blogcatalog user.
 
     On the homepage of a user, the program analysis page's source code.
     Get the number of a type(following, followers, discussions) and count 
-    how many pages it has to search. It send each page's url to the 
-    get_page_content function, get function's return.
+    how many pages it has to search. It sends each page's url to the 
+    get_page_content function and get info returned.
 
     Args:
         username: blogcatalog username.
@@ -303,6 +302,8 @@ def get_detail_info(username, task_type):
 
     Returns:
         result: a string contains all the data you want to get from a user.
+                the followers/following name will be split by '$||$'
+                the discussion data's each line is a thread(title$||$url$||$comment_num)
     """
     # init the local variable according to the task type
     task_url = url + 'user/' + username + task_info[task_type]['task_url']
@@ -341,9 +342,24 @@ def get_detail_info(username, task_type):
 
 
 def get_info(work_dir):
-    user_done_path = work_dir + '\\filter\\' + 'user_done.txt'
-    user_todo_path = work_dir + '\\filter\\' + 'user_todo.txt'
-    user_next_path = work_dir + '\\filter\\' + 'user_next.txt'
+    """get all user's info in a user_todo.txt
+
+    This module first get a list of user_todo and user_done. With the list, it 
+    traversal the user_todo list and compare the user_done to find which user
+    to get info. The program will setup a 'data' folder and store each user's 
+    info as a txt file named by 'username.txt'. At the same time, it will save 
+    the username done before to 'user_done.txt', and the next layer username to 
+    'user_next.txt'.
+
+    Args:
+        work_dir: the dir of the program.
+
+    Returns:
+        None 
+    """
+    user_done_path = work_dir + '/filter/' + 'user_done.txt'
+    user_todo_path = work_dir + '/filter/' + 'user_todo.txt'
+    user_next_path = work_dir + '/filter/' + 'user_next.txt'
     # a list contains used username.
     user_done = read_from_txt(user_done_path, ' ', 0)
     # a list contains the username to be done.
@@ -355,7 +371,7 @@ def get_info(work_dir):
         print i, '/', user_num
         if not username in user_done:
             user_info = ""
-            user_file_path = work_dir + '\\data\\' + username + '.txt'
+            user_file_path = work_dir + '/data/' + username + '.txt'
             basic_info = get_basic_info(username)
             followers = get_detail_info(username, task_type = 'followers')
             following = get_detail_info(username, task_type = 'following')
@@ -377,18 +393,18 @@ def test():
 
     print get_basic_info('TonyB')
 
-    if not os.path.exists(file_path + '\\test\\'):
-        os.mkdir(file_path + '\\test\\')
+    if not os.path.exists(file_path + '/test/'):
+        os.mkdir(file_path + '/test/')
 
     username = 'caramiawhy'
     following = get_detail_info(username, task_type = 'following')
-    write_to_txt(following, file_path + '\\test\\' + str(username) + '_following.txt')
+    write_to_txt(following, file_path + '/test/' + str(username) + '_following.txt')
     print str(username), 'following finished!'
     followers = get_detail_info(username, task_type = 'followers')
-    write_to_txt(followers, file_path + '\\test\\' + str(username) + '_followers.txt')
+    write_to_txt(followers, file_path + '/test/' + str(username) + '_followers.txt')
     print str(username), 'followers finished!'
     discussions = get_detail_info(username, task_type = 'discussions')
-    write_to_txt(discussions, file_path + '\\test\\' + str(username) + '_discussions.txt')
+    write_to_txt(discussions, file_path + '/test/' + str(username) + '_discussions.txt')
     print str(username), 'discussions finished!'
     
 
