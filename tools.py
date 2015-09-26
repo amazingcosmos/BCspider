@@ -2,6 +2,7 @@
 
 import ConfigParser
 import BCspider
+import sys
 
 def find_popular_user(file_path = './data/user_basic_info.txt'):
     fp = open(file_path, 'r')
@@ -55,6 +56,7 @@ def count_user(file_path = './data/user_next.txt'):
 if __name__ == '__main__':
     user_num = count_user('./data/user_next.txt')
     print 'the number of next layer user is:', user_num, '\n'
+    sys.exit(1)
     # user_todo = find_popular_user()
     # # print len(user_todo)
     # BCspider.write_to_txt(user_todo, './data/user_todo.txt')
