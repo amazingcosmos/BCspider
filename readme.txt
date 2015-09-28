@@ -6,6 +6,9 @@ user_detail_info:
 <followers(split by $||$)>
 <following(split by $||$)>
 <discussions_title>$||$<href url>$||$<comment num>
+<discussions_title>$||$<href url>$||$<comment num>
+<discussions_title>$||$<href url>$||$<comment num>
+...
 
 The best way to use this module on windows is to click the run.bat. But before you do it, make sure you have
 put a user_todo.txt, contains the username of blogcatalog you want to get info from at each line, to the ./filter folder(Each username each line :)
