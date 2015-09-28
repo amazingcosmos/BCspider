@@ -58,6 +58,9 @@ def read_from_txt(file_path, split_char, split_index):
                     break
                 elif line.count('\n') == len(line):
                     continue
+                elif split_index == 'all':
+                    line = line.split(split_char)
+                    result += line 
                 else:
                     line = line.split(split_char)[split_index].encode('utf-8')
                     result.append(line)

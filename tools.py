@@ -5,10 +5,18 @@ import BCspider
 import sys
 
 
-def get_user(file_path , index_from, index_to):
+def get_user_from_next(file_path):
     """
     """
-    user_todo = BCspider.read_from_txt(file_path + 'filter.txt', '$||$', 0)[index_from:index_to]
+    user_todo = BCspider.read_from_txt(file_path, '$||$', 'all')
+    user_todo = list(set(user_todo))
+    BCspider.write_to_txt(user_todo, './filter/user_todo.txt')
+
+
+def get_user_from_filter(file_path , index_from, index_to):
+    """
+    """
+    user_todo = BCspider.read_from_txt(file_path, '$||$', 0)[index_from:index_to]
     BCspider.write_to_txt(user_todo, file_path + 'user_todo.txt')
 
 
@@ -51,5 +59,6 @@ if __name__ == '__main__':
     # # print len(user_todo)
     # BCspider.write_to_txt(user_todo, './data/user_todo.txt')
 
-    # get_user('./filter/', 3, 13)
+    # get_user_from_filter('./filter/filter.txt, 3, 13)
 
+    # get_user_from_next('./filter/user_next_layer1.txt')
