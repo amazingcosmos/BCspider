@@ -238,7 +238,7 @@ def get_basic_info(username):
     """
     result = ""
     error_str = 'get %s error'
-    homepage = url + 'user/' + username
+    homepage = url + 'user/' + username + '/discussions/'
     soup = get_soup(homepage)
     if soup == None:
         return ""
@@ -399,7 +399,7 @@ def test():
     if not os.path.exists(file_path + '/test/'):
         os.mkdir(file_path + '/test/')
 
-    username = 'caramiawhy'
+    username = 'timethief'
     following = get_detail_info(username, task_type = 'following')
     write_to_txt(following, file_path + '/test/' + str(username) + '_following.txt')
     print str(username), 'following finished!'
